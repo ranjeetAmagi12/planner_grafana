@@ -1,8 +1,3 @@
-
-//import {getScheduleItemDetails} from "./metric";
-
-//let getScheduleItemDetails = require("./metric.ts");
-
 const express = require('express');
 
 const client = require('prom-client');
@@ -13,16 +8,13 @@ const app = express();
 
 const { Pool,Client} = require('pg');
 
-const getcredentials =  async() => {
-    return {
-    user: "masteruser",
-    host:"127.0.0.1",
-    database: "postgres",
-    password: "rwtDdPBAau^ugpTnF6-.oIv2LWF,wH",
+  const credentials = {
+    user: 'newuser',
+    host: 'localhost',
+    database: 'postgres',
+    password: 'newuser',
     port: 5432
-    };
   };
-
 
 // Create a Registry to register the metrics
 const register = new client.Registry();
@@ -42,38 +34,30 @@ const metricsInterval = client.collectDefaultMetrics();
 
 app.get('/schedule_item/metrics', async (req, res) => {
     try {
-        //const register = new client.Registry();
-        //const metric = client.collectDefaultMetrics({ register });
         const metrics = register_schedule_item_gauge();
-
-//         const dbClient = new Client(getcredentials);
-//   await dbClient.connect();
-//   let id = 1;
-//   let result = getScheduleItemDetails(id, dbClient, metrics);
-  
-  
-        const pool = new Pool(getcredentials());
-        let result = getScheduleItemDetails(pool, metrics);
-        //console.log("schedule_item" + result.rows);
-        res.send(result);
+        const pool = new Pool(credentials);
+        await getScheduleItemDetails( pool, metrics);
+        //let result = getScheduleItemDetails(pool, metrics);
+       // res.send(result);
         await pool.end();
-        //await dbClient.end();
+
+        console.log("finished");
+        return "hi";
+      //  res.send(client.generate_latest());
     } catch (error) {
         console.log(error);
     }
-    return new Response(client.generate_latest());
+    
+   // return new Response(client.generate_latest());
 });
 
 app.get('/cp_and_ms/metrics', async (req, res) => {
     try {
-        // const register = new client.Registry();
-        // const metrics = client.collectDefaultMetrics({ register });
         const metrics = register_cp_and_ms_gauge();
 
-        const pool = new Pool(getcredentials());
-        let result = getCpAndMsDetails( pool, metrics);
-        //console.log("schedule_item" + result.rows);
-        res.send(result);
+        const pool = new Pool(credentials);
+        await getCpAndMsDetails( pool, metrics);
+       // res.send(result);
         await pool.end();
     } catch (error) {
         console.log(error)
@@ -84,14 +68,9 @@ app.get('/cp_and_ms/metrics', async (req, res) => {
 
 app.get('/schedule_entry/metrics', async (req, res) => {
       try {
-        // const register = new client.Registry();
-        // const metrics = client.collectDefaultMetrics({ register });
-        
         const metrics = register_schedule_entry_gauge();
-        const pool = new Pool(getcredentials());
-        let result = getScheduleEntryDetails( pool, metrics);
-        //console.log("schedule_item" + result.rows);
-        res.send(result);
+        const pool = new Pool(credentials);
+        await getScheduleEntryDetails( pool, metrics);
         await pool.end();
     } catch (error) {
         console.log(error)
@@ -102,14 +81,9 @@ app.get('/schedule_entry/metrics', async (req, res) => {
 
 app.get('/collection/metrics', async (req, res) => {
     try {
-        // const register = new client.Registry();
-        // const metrics = client.collectDefaultMetrics({ register });
-
         const metrics = register_collection_gauge();
-        const pool = new Pool(getcredentials());
-        let result = getCollectionDetails( pool, metrics);
-        //console.log("schedule_item" + result.rows);
-        res.send(result);
+        const pool = new Pool(credentials);
+        getCollectionDetails( pool, metrics);
         await pool.end();
     } catch (error) {
         console.log(error)
@@ -119,31 +93,27 @@ app.get('/collection/metrics', async (req, res) => {
 
 
 function register_schedule_item_gauge() {
-    return new Client.Gauge({ name: 'item_schedule_details', help: ['id', 'schedule_entry_id', 'start_time', 'end_time', 'collection_id', 'tenant_id', 'feed_id', 'target_duration', 'created_at', 'updated_at'] });
+    return new client.Gauge({ name: 'item_schedule_details', help: ['id', 'schedule_entry_id', 'start_time', 'end_time', 'collection_id', 'tenant_id', 'feed_id', 'target_duration', 'created_at', 'updated_at'] });
 };
-
 
 function register_cp_and_ms_gauge() {
-    return new Client.Gauge({ name: 'cp_and_ms_details', help: ['tenant_id', 'cloudport_feed_id', 'account_name', 'platform_code'] });
+    return new client.Gauge({ name: 'cp_and_ms_details', help: ['tenant_id', 'cloudport_feed_id', 'account_name', 'platform_code'] });
 };
-
 
 function register_schedule_entry_gauge() {
-    return new Client.Gauge({ name: 'schedule_entry_details', help: ['id', 'start_date', 'end_date', 'target_duration','tenant_id', 'feed_id', 'created_at', 'updated_at'] });
+    return new client.Gauge({ name: 'schedule_entry_details', help: ['id', 'start_date', 'end_date', 'target_duration','tenant_id', 'feed_id', 'created_at', 'updated_at'] });
 };
-
 
 function register_collection_gauge() {
-    return new Client.Gauge({ name: 'collection_details', help: ['id', 'tenant_id', 'feed_id','episode_target_duration','collection_type','created_at', 'updated_at'] });
+    return new client.Gauge({ name: 'collection_details', help: ['id', 'tenant_id', 'feed_id','episode_target_duration','collection_type','created_at', 'updated_at'] });
 };
-
 
 
 async function getScheduleItemDetails(pool,metrics) {
-    const text = `SELECT * FROM schedule_item`;
-    console.log("text "+ text);
-    let vals =  pool.query(text);
-    for(let val of vals) {
+    const text = "SELECT * FROM schedule_item ORDER BY id ASC LIMIT 100";
+    let vals = await pool.query(text);
+    let rows = vals.rows;
+    for(let val of rows) {
         let resp = {
             id: val.id,
             schedule_entry_id: val.schedule_entry_id,
@@ -156,9 +126,10 @@ async function getScheduleItemDetails(pool,metrics) {
 			created_at: val.created_at,
             updated_at: val.updated_at
 	    };
-        metrics['schedule_item'].labels = resp;
+        metrics.hashMap.labels = resp;
+        console.log("metrics resp "+ resp);
     }
-    
+    console.log("end of getScheduleItemDetails");
   //  return metrics['schedule_item'].labels;
     
     //return pool.query(text, values);
@@ -166,26 +137,28 @@ async function getScheduleItemDetails(pool,metrics) {
 
 
 async function getCpAndMsDetails(pool,metrics) {
-    const text = `SELECT * FROM cp_and_ms`;
-    console.log("text "+ text);
-    let vals =  pool.query(text);
-    for(let val of vals) {
+    const text = "SELECT * FROM cp_and_ms LIMIT 100";
+    let vals =  await pool.query(text);
+    let rows = vals.rows;
+    for(let val of rows) {
         let resp = {
 			tenant_id: val.tenant_id,
 			cloudport_feed_id: val.cloudport_feed_id,
 			account_name: val.account_name,
 			platform_code: val.platform_code
 	    };
-        metrics['cp_and_ms'].labels = resp;
+        metrics.hashMap.labels = resp;
+        console.log("metrics resp "+ resp);
     }
+    console.log("end of getCpAndMsDetails");
 }
 
 
 async function getScheduleEntryDetails(pool,metrics) {
-    const text = `SELECT * FROM schedule_entry`;
-    console.log("text "+ text);
-    let vals =  pool.query(text);
-    for(let val of vals) {
+    const text = "SELECT * FROM schedule_entry ORDER BY id ASC LIMIT 100";
+    let vals = await pool.query(text);
+    let rows = vals.rows;
+    for(let val of rows) {
         let resp = {
 			id: val.id,
 			start_date: val.start_date,
@@ -196,15 +169,17 @@ async function getScheduleEntryDetails(pool,metrics) {
 			created_at: val.created_at,
             updated_at: val.updated_at
 	    };
-        metrics['schedule_entry'].labels = resp;
+        metrics.hashMap.labels = resp;
+        console.log("metrics resp "+ resp);
     }
+    console.log("end of getScheduleEntryDetails");
 }
 
 async function getCollectionDetails(pool,metrics) {
-    const text = `SELECT * FROM collection`;
-    console.log("text "+ text);
-    let vals =  pool.query(text);
-    for(let val of vals) {
+    const text = "SELECT * FROM collection ORDER BY id ASC LIMIT 100";
+    let vals = await pool.query(text);
+    let rows = vals.rows;
+    for(let val of rows) {
         let resp = {
 			id: val.id,
             tenant_id: val.tenant_id,
@@ -214,6 +189,8 @@ async function getCollectionDetails(pool,metrics) {
 			created_at: val.created_at,
             updated_at: val.updated_at
 	    };
-        metrics['collection'].labels = resp;
+        metrics.hashMap.labels = resp;
+        console.log("metrics resp "+ resp);
     }
+    console.log("end of getCollectionDetails");
 }

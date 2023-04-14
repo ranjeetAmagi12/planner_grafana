@@ -15,5 +15,5 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-EXPOSE 9091
+EXPOSE 8080
 CMD [ "node", "main.ts" ]
