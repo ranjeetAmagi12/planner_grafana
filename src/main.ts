@@ -75,7 +75,7 @@ app.get('/collection/metrics', async (req, res) => {
     try {
         const metrics = register_collection_gauge();
         const pool = new Pool(credentials);
-        let result = getCollectionDetails( pool, metrics);
+        let result = await getCollectionDetails( pool, metrics);
         await pool.end();
         res.send(result);
     } catch (error) {
