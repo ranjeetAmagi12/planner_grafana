@@ -55,7 +55,6 @@ app.get('/cp_and_ms/metrics', async (req, res) => {
     } catch (error) {
         console.log(error)
     }
-    return new Response(client.generate_latest());
 });
 
 
@@ -69,7 +68,6 @@ app.get('/schedule_entry/metrics', async (req, res) => {
     } catch (error) {
         console.log(error)
     }
-    return new Response(client.generate_latest());
 });
 
 
@@ -83,7 +81,6 @@ app.get('/collection/metrics', async (req, res) => {
     } catch (error) {
         console.log(error)
     }
-    return new Response(client.generate_latest());
 });
 
 
