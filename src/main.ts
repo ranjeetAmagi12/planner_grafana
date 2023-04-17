@@ -125,8 +125,6 @@ async function getScheduleItemDetails(pool,metrics) {
     console.log("end of getScheduleItemDetails");
     return metrics.labelNames;
   //  return metrics['schedule_item'].labels;
-    
-    //return pool.query(text, values);
 }
 
 
