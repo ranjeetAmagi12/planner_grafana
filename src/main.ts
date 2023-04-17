@@ -7,15 +7,6 @@ const app = express();
 const { Pool,Client} = require('pg');
 require("dotenv").config();
 
-
-//   const credentials = {
-//     user: 'newuser',
-//     host: 'localhost',
-//     database: 'postgres',
-//     password: 'newuser',
-//     port: 5432
-//   };
-
 const credentials = {
     user: process.env.user,
     host: process.env.host,
