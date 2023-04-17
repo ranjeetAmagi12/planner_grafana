@@ -36,29 +36,22 @@ app.get('/schedule_item/metrics', async (req, res) => {
     try {
         const metrics = register_schedule_item_gauge();
         const pool = new Pool(credentials);
-        await getScheduleItemDetails( pool, metrics);
-        //let result = getScheduleItemDetails(pool, metrics);
-       // res.send(result);
+        let result = await getScheduleItemDetails( pool, metrics);
         await pool.end();
-
-        console.log("finished");
-        return "hi";
+        res.send(result);
       //  res.send(client.generate_latest());
     } catch (error) {
         console.log(error);
     }
-    
-   // return new Response(client.generate_latest());
 });
 
 app.get('/cp_and_ms/metrics', async (req, res) => {
     try {
         const metrics = register_cp_and_ms_gauge();
-
         const pool = new Pool(credentials);
-        await getCpAndMsDetails( pool, metrics);
-       // res.send(result);
+        let result = await getCpAndMsDetails( pool, metrics);
         await pool.end();
+        res.send(result);
     } catch (error) {
         console.log(error)
     }
@@ -70,8 +63,9 @@ app.get('/schedule_entry/metrics', async (req, res) => {
       try {
         const metrics = register_schedule_entry_gauge();
         const pool = new Pool(credentials);
-        await getScheduleEntryDetails( pool, metrics);
+        let result = await getScheduleEntryDetails( pool, metrics);
         await pool.end();
+        res.send(result);
     } catch (error) {
         console.log(error)
     }
@@ -83,8 +77,9 @@ app.get('/collection/metrics', async (req, res) => {
     try {
         const metrics = register_collection_gauge();
         const pool = new Pool(credentials);
-        getCollectionDetails( pool, metrics);
+        let result = getCollectionDetails( pool, metrics);
         await pool.end();
+        res.send(result);
     } catch (error) {
         console.log(error)
     }
@@ -126,10 +121,12 @@ async function getScheduleItemDetails(pool,metrics) {
 			created_at: val.created_at,
             updated_at: val.updated_at
 	    };
-        metrics.hashMap.labels = resp;
-        console.log("metrics resp "+ resp);
+        //metrics.hashMap.labels = resp;
+        metrics.labelNames.push(resp);
     }
+   // metrics.registers.item_schedule_details.labelNames = metrics.labelNames;
     console.log("end of getScheduleItemDetails");
+    return metrics.labelNames;
   //  return metrics['schedule_item'].labels;
     
     //return pool.query(text, values);
@@ -147,10 +144,10 @@ async function getCpAndMsDetails(pool,metrics) {
 			account_name: val.account_name,
 			platform_code: val.platform_code
 	    };
-        metrics.hashMap.labels = resp;
-        console.log("metrics resp "+ resp);
+        metrics.labelNames.push(resp);
     }
     console.log("end of getCpAndMsDetails");
+    return metrics.labelNames;
 }
 
 
@@ -169,10 +166,10 @@ async function getScheduleEntryDetails(pool,metrics) {
 			created_at: val.created_at,
             updated_at: val.updated_at
 	    };
-        metrics.hashMap.labels = resp;
-        console.log("metrics resp "+ resp);
+        metrics.labelNames.push(resp);
     }
     console.log("end of getScheduleEntryDetails");
+    return metrics.labelNames;
 }
 
 async function getCollectionDetails(pool,metrics) {
@@ -189,8 +186,8 @@ async function getCollectionDetails(pool,metrics) {
 			created_at: val.created_at,
             updated_at: val.updated_at
 	    };
-        metrics.hashMap.labels = resp;
-        console.log("metrics resp "+ resp);
+        metrics.labelNames.push(resp);
     }
     console.log("end of getCollectionDetails");
+    return metrics.labelNames;
 }
