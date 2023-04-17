@@ -4,16 +4,24 @@ const client = require('prom-client');
 
 const app = express();
 
-//const port = process.env.PORT || 3001;
-
 const { Pool,Client} = require('pg');
+require("dotenv").config();
 
-  const credentials = {
-    user: 'newuser',
-    host: 'localhost',
-    database: 'postgres',
-    password: 'newuser',
-    port: 5432
+
+//   const credentials = {
+//     user: 'newuser',
+//     host: 'localhost',
+//     database: 'postgres',
+//     password: 'newuser',
+//     port: 5432
+//   };
+
+const credentials = {
+    user: process.env.user,
+    host: process.env.host,
+    database: process.env.database,
+    password: process.env.password,
+    port: process.env.port
   };
 
 // Create a Registry to register the metrics
